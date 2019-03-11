@@ -1,14 +1,22 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using System.Web;
-using Microsoft.AspNet.SignalR;
+using POC_SignalR.App_Start;
+using POC_SignalR.Service;
+using StackExchange.Redis;
 
 namespace POC_SignalR.Hub
 {
     public class MainHub : Microsoft.AspNet.SignalR.Hub
     {
+        private readonly ConnectionMultiplexer _redisConnection = RedisHelper.Instance;
+        private RedisNotificationService _redisNotification;
+
+        public RedisNotificationService RedisNotification
+        {
+            get => _redisNotification ?? (_redisNotification = new RedisNotificationService(_redisConnection));
+            set => _redisNotification = value;
+        }
+
         public void Hello()
         {
             Clients.All.hello();
@@ -30,14 +38,22 @@ namespace POC_SignalR.Hub
         }
 
         #region "Client Event"
+
         /// <summary>
-        /// Sends the specified name.
+        ///     Sends the specified name.
         /// </summary>
         /// <param name="name">The name.</param>
         /// <param name="message">The message.</param>
         public void Send(string name, string message)
         {
-            Clients.All.broadcastMessage(name, message);
+            RedisNotification = new RedisNotificationService(_redisConnection);
+            var chatMessage = new ChatMessage
+            {
+                Name = name,
+                Message = message,
+                Date = DateTime.Now
+            };
+             RedisNotification.PublishAsync("ChatMessage", chatMessage);
         }
 
         #endregion

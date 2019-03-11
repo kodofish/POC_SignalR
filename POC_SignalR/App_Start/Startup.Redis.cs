@@ -1,28 +1,29 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
+﻿using LevelUp.Serializer;
 using Microsoft.AspNet.SignalR;
 using Microsoft.Owin;
-using Newtonsoft.Json;
 using POC_SignalR.App_Start;
+using POC_SignalR.Hub;
+using POC_SignalR.Service;
+using StackExchange.Redis;
+using Startup = POC_SignalR.Startup;
 
 [assembly: OwinStartup(typeof(Startup))]
 
-namespace POC_SignalR.App_Start
+namespace POC_SignalR
 {
     public partial class Startup
     {
-        //private IStrategy _redisStrategy;
-        //private IRedisNotificationService _subscriber;
+        private IRedisNotificationService _subscriber;
+        private IHubContext _mainHub;
 
         /// <summary>
         ///     Initials the Service
         /// </summary>
         private void InitialService()
         {
-            //_redisStrategy = Singleton<IEngine>.Instance.Resolve<IStrategy>();
-            //_subscriber = Singleton<IEngine>.Instance.Resolve<IRedisNotificationService>();
+            IConnectionMultiplexer connectionMultiplexer = RedisHelper.Instance;
+            _subscriber = new RedisNotificationService(connectionMultiplexer);
+            _mainHub = GlobalHost.ConnectionManager.GetHubContext<MainHub>();
         }
 
         /// <summary>
@@ -33,13 +34,11 @@ namespace POC_SignalR.App_Start
             InitialService();
 
             // 訂閱: 訊息通知 (value: <BonusNotification>)
-            //_subscriber.Subscribe("PushBonus", (channel, value) =>
-            //{
-            //    _redisStrategy.SubscribePushBonus(channel, value);
-            //    _redisStrategy.SubscribePushBonusForWebSubscribe(channel, value);
-            //});
+            _subscriber.Subscribe("ChatMessage", (channel, value) =>
+            {
+                ChatMessage chatMessage = Serializer.DeSerializeFromText<ChatMessage>(value, SerializerType.Json);
+                _mainHub.Clients.All.broadcastMessage(chatMessage.Name, chatMessage.Message);
+            });
         }
     }
-
-    
 }

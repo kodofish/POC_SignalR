@@ -18,17 +18,20 @@
         </nav>
         <div class="container">
             <div class="row">
-                <button id="btnStart" class="btn-primary">Start SignalR</button>
-                <button id="btnStop" class="btn btn-primary">Stop SignalR</button>
+                <!--<button id="btnStart" class="btn-primary">Start SignalR</button>
+                <button id="btnStop" class="btn btn-primary">Stop SignalR</button>-->
+            </div>
+            <div class="row">
+                <input id="tbUserName"/>
+                <input id="tbSendMessage"/>
+                <button id="btnSendMessage" class="btn btn-primary">Send</button>
             </div>
         </div>
         <button id="btnSayHello" class="btn btn-info">Say hello!</button>
         <div class="container">
             <div class="row">
-                訊息區
+                收到的訊息
                 <div id="messages"></div>
-                <div id="room">
-                </div>
             </div>
         </div>
     </div>
@@ -46,9 +49,18 @@
             var broadcastHub = $.connection.mainHub;
 
             setLocalServer();
+            startConnect();
 
             function setLocalServer() {
                 $.connection.hub.url = "http://localhost:58678/signalr";
+            }
+
+            function startConnect() {
+                $.connection.hub.start()
+                    .done(function () {
+                        isStarted = true;
+                        $('#messages').append('<li><strong>' + moment().format() + '</strong>:Connection ID: ' + $.connection.hub.id + '</li>');
+                    });
             }
 
             function setToken() {
@@ -74,11 +86,7 @@
                 $('#messages').append('<li>已設定連線至 Dev Server . </li');
             });
             $('#btnStart').click(function () {
-                $.connection.hub.start()
-                    .done(function () {
-                        isStarted = true;
-                        $('#messages').append('<li><strong>' + moment().format() + '</strong>:Connection ID: ' + $.connection.hub.id + '</li>');
-                    });
+                startConnect();
             });
 
             $('#btnStop').click(function () {
@@ -93,14 +101,14 @@
             };
 
             broadcastHub.client.broadcastMessage = function (name, message) {
-                $('#messages').append('<li><strong>' + moment().format() + ': </strong> ' + name + 'say:' + htmlEncode(JSON.stringify(message)) + '</li>');
+                $('#messages').append('<li><strong>' + moment().format() + ': </strong> ' + name + ' say:' + htmlEncode(JSON.stringify(message)) + '</li>');
             };
 
-            //responseRoomId 由 Server 所回應的 RoomId
-            broadcastHub.client.responseRoomId = function (message) {
-                $('#div_roomId').append('<li><strong>' + moment().format() + '</strong>: Room ID= ' + htmlEncode(JSON.stringify(message)) + '</li>');
-            };
-
+            $("#btnSendMessage").click(function () {
+                var name = $("#tbUserName").val();
+                var message = $("#tbSendMessage").val();
+                broadcastHub.server.send(name, message);
+            });
             $('#btnSayHello').click(function () {
                 broadcastHub.server.hello();
             });
