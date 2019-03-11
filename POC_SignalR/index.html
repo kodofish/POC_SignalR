@@ -1,0 +1,170 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="/Content/bootstrap.min.css" rel="stylesheet"/>
+    <title>Signal Web Client</title>
+
+</head>
+<body>
+    <div class="container">
+        <nav class="navbar navbar-brand">
+            <div class="container-fluid">
+                <div class="navbar-nav">
+                    <a class="navbar-brand">Signal Web Client</a>
+                </div>
+            </div>
+        </nav>
+        <div class="container">
+            <div class="row">
+                <button id="btnStart" class="btn-primary">Start SignalR</button>
+                <button id="btnStop" class="btn btn-primary">Stop SignalR</button>
+            </div>
+        </div>
+        <button id="btnSayHello" class="btn btn-info">Say hello!</button>
+        <div class="container">
+            <div class="row">
+                訊息區
+                <div id="messages"></div>
+                <div id="room">
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="Scripts/jquery-3.3.1.min.js"></script>
+    <script src="Scripts/bootstrap.min.js"></script>
+    <script src="Scripts/jquery.signalR-2.4.0.js"></script>
+    <script src="Scripts/moment.js"></script>
+    <script src="/SignalR/hubs"></script>
+    <script>
+        var connection;
+        $(function () {
+            var isStarted = false;
+
+            //Create Hub Proxy
+            var broadcastHub = $.connection.mainHub;
+
+            setLocalServer();
+
+            function setLocalServer() {
+                $.connection.hub.url = "http://localhost:58678/signalr";
+            }
+
+            function setToken() {
+                //設定連線時所要帶的QueryString
+                $.connection.hub.qs = {
+                    'token': "Bearer " + $('#accessToken').val()
+                };
+
+                //設定Header
+                $.signalR.ajaxDefaults.headers = { Authorization: "Bearer " + $('#accessToken').val() };
+            }
+
+            $('#authorize').click(function () {
+                setToken();
+                $('#messages').append('<li>已設定 Token. </li');
+            });
+            $('#btnLocalServer').click(function () {
+                setLocalServer();
+                $('#messages').append('<li>已設定連線至 Local Server . </li');
+            });
+            $('#btnDevServer').click(function () {
+                setDevServer();
+                $('#messages').append('<li>已設定連線至 Dev Server . </li');
+            });
+            $('#btnStart').click(function () {
+                $.connection.hub.start()
+                    .done(function () {
+                        isStarted = true;
+                        $('#messages').append('<li><strong>' + moment().format() + '</strong>:Connection ID: ' + $.connection.hub.id + '</li>');
+                    });
+            });
+
+            $('#btnStop').click(function () {
+                $.connection.hub.stop();
+                isStarted = false;
+            });
+
+            //建立給Server端呼叫的方法
+            //getMessage 由Server所傳來的訊息
+            broadcastHub.client.hello = function (message) {
+                $('#messages').append('<li><strong>' + moment().format() + ':</strong> hello!</li>');
+            };
+
+            broadcastHub.client.broadcastMessage = function (name, message) {
+                $('#messages').append('<li><strong>' + moment().format() + ': </strong> ' + name + 'say:' + htmlEncode(JSON.stringify(message)) + '</li>');
+            };
+
+            //responseRoomId 由 Server 所回應的 RoomId
+            broadcastHub.client.responseRoomId = function (message) {
+                $('#div_roomId').append('<li><strong>' + moment().format() + '</strong>: Room ID= ' + htmlEncode(JSON.stringify(message)) + '</li>');
+            };
+
+            $('#btnSayHello').click(function () {
+                broadcastHub.server.hello();
+            });
+
+            $.connection.hub.logging = true;
+            connection = $.connection;
+            var tryingToReconnect = false;
+
+            $.connection.hub.reconnecting(function () {
+                tryingToReconnect = true;
+                console.log(moment().format() + ':reconnecting.');
+                console.log(moment().format() + ':tryingToReconnect=' + tryingToReconnect);
+            });
+
+            $.connection.hub.reconnected(function () {
+                tryingToReconnect = false;
+                console.log(moment().format() + ':reconnected.');
+                console.log(moment().format() + ':tryingToReconnect=' + tryingToReconnect);
+            });
+
+            $.connection.hub.disconnected(function () {
+                if ($.connection.hub.lastError) { console.log("Disconnected. Reason: " + $.connection.hub.lastError.message); }
+                console.log(moment().format() + ':disconnected');
+                console.log(moment().format() + ':tryingToReconnect=' + tryingToReconnect);
+
+                console.log(moment().format() + ':SignalR was disconnected.'); // Your function to notify user.
+                //setTimeout(function() {
+                //    $.connection.hub.start().done(function () {
+                //        $('#messages').append('<li>Connection ID: ' + $.connection.hub.id + '</li>');
+                //        $('#messages').append('<li>已連線.</li>');
+                //    });
+                //}, 5000); // Restart connection after 5 seconds.
+                $('#messages').append('<li>已中斷連線, 重連中.</li>');
+
+            });
+
+            $.connection.hub.error(function (error) {
+                console.log(moment().format() + ':SignalR error: ' + error);
+            });
+
+            $.connection.hub.connectionSlow(function () {
+                console.log(moment().format() + ':We are currently experiencing difficulties with the connection.');
+            });
+
+            $.connection.hub.starting(function () {
+                console.log(moment().format() + ":開始了..."); //triggered
+            });
+
+            $.connection.hub.received(function (data) {
+                console.log(moment().format() + ": just received data."); //triggered
+                console.log(moment().format() + "data:" + data);
+            });
+
+            $.connection.hub.stateChanged(function () {
+                console.log(moment().format() + ":stateChanged"); //triggered
+            });
+
+
+        });
+
+        function htmlEncode(value) {
+            var encodedValue = $('<div />').text(value).html();
+            return encodedValue;
+        }
+    </script>
+</body>
+</html>
