@@ -151,6 +151,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App_Start\Startup.cs" />
+    <Compile Include="App_Start\Startup.Redis.cs" />
     <Compile Include="Hub\MainHub.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
