@@ -11,7 +11,7 @@ using POC_SignalR.App_Start;
 [assembly: OwinStartup(typeof(Startup))]
 namespace POC_SignalR.App_Start
 {
-    public class Startup
+    public partial class Startup
     {
         /// <summary>
         ///     Configurations the specified application.
@@ -21,30 +21,8 @@ namespace POC_SignalR.App_Start
         {
             app.UseCors(CorsOptions.AllowAll);
 
-            //app.Map("/signalr", map =>
-            //{
-            //    // Setup the CORS middleware to run before SignalR.
-            //    // By default this will allow all origins. You can
-            //    // configure the set of origins and/or http verbs by
-            //    // providing a cors options with a different policy.
-            //    map.UseCors(CorsOptions.AllowAll);
-            //    var hubConfiguration = new HubConfiguration
-            //    {
-            //        // You can enable JSONP by uncommenting line below.
-            //        // JSONP requests are insecure but some older browsers (and some
-            //        // versions of IE) require JSONP to work cross domain
-            //        // EnableJSONP = true
-            //    };
-            //    // Run the SignalR pipeline. We're not using MapSignalR
-            //    // since this branch already runs under the "/signalr"
-            //    // path.
-
-            //    hubConfiguration.EnableDetailedErrors = true;
-            //    map.RunSignalR(hubConfiguration);
-            //});
-
+            
             //ConfigurationOAuth(app);
-            var hubConfiguration = new HubConfiguration();
             //var container = AutofacConfig.CreateContainer();
 
             //GlobalHost.DependencyResolver = new AutofacDependencyResolver(container) as IDependencyResolver;
@@ -62,27 +40,19 @@ namespace POC_SignalR.App_Start
             GlobalHost.Configuration.ConnectionTimeout = TimeSpan.FromSeconds(110);
             GlobalHost.Configuration.KeepAlive = TimeSpan.FromSeconds(10);
 
+            var hubConfiguration = new HubConfiguration
+            {
+                EnableJavaScriptProxies = true, EnableJSONP = true, EnableDetailedErrors = true
+            };
             //hubConfiguration.Resolver = new Autofac.Integration.SignalR.AutofacDependencyResolver(container);
-            hubConfiguration.EnableJavaScriptProxies = true;
-            hubConfiguration.EnableJSONP = true;
-            hubConfiguration.EnableDetailedErrors = true;
 
             //app.UseAutofacMiddleware(container);
             app.MapSignalR(hubConfiguration);
-            //app.RunSignalR(hubConfiguration);
+            app.RunSignalR(hubConfiguration);
             //對所有Hub啟用身份驗證
             //GlobalHost.HubPipeline.RequireAuthentication();
             //ConfigurationRedis();
 
-            #region "Web API 2"
-            //var httpConfig = GlobalConfiguration.Configuration;
-            //httpConfig.DependencyResolver = new AutofacWebApiDependencyResolver(container);
-
-            //HttpConfiguration webApiConfiguration = new HttpConfiguration();
-            //WebApiConfig.Register(webApiConfiguration);
-            //app.UseAutofacWebApi(webApiConfiguration);
-            //app.UseWebApi(webApiConfiguration);
-            #endregion
         }
     }
 }
