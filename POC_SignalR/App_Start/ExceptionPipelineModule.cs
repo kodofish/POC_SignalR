@@ -11,11 +11,9 @@ namespace POC_SignalR
     /// <seealso cref="Microsoft.AspNet.SignalR.Hubs.HubPipelineModule" />
     public class ExceptionPipelineModule : HubPipelineModule
     {
-
         /// <summary>
         /// Initializes a new instance of the <see cref="ExceptionPipelineModule"/> class.
         /// </summary>
-        /// <param name="ravenClient">The raven client.</param>
         public ExceptionPipelineModule()
         {
         }
@@ -23,8 +21,7 @@ namespace POC_SignalR
         /// <inheritdoc />
         protected override void OnIncomingError(ExceptionContext exceptionContext, IHubIncomingInvokerContext invokerContext)
         {
-            dynamic caller = invokerContext.Hub.Clients.Caller;
-            caller.ExceptionHandler(exceptionContext.Error.Message);
+            invokerContext.Hub.Clients.Caller.ExceptionHandler(exceptionContext.Error.Message);
             base.OnIncomingError(exceptionContext, invokerContext);
         }
 

@@ -8,7 +8,7 @@ namespace POC_SignalR
 {
     public partial class Startup
     {
-        public void ConfigurationSignalR(IAppBuilder app)
+        private void ConfigurationSignalR(IAppBuilder app)
         {
             GlobalHost.HubPipeline.AddModule(new ExceptionPipelineModule());
             
@@ -23,7 +23,7 @@ namespace POC_SignalR
             };
 
             app.MapSignalR(hubConfiguration);
-            app.RunSignalR(hubConfiguration);
+            // app.RunSignalR(hubConfiguration);
 
             //對所有Hub啟用身份驗證
             //GlobalHost.HubPipeline.RequireAuthentication();

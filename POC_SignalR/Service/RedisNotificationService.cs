@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using System.Web;
-using LevelUp.Serializer;
+using Newtonsoft.Json;
 using StackExchange.Redis;
 
 namespace POC_SignalR.Service
@@ -26,13 +23,13 @@ namespace POC_SignalR.Service
         /// <param name="connectionMultiplexer">The connection multiplexer.</param>
         public RedisNotificationService(IConnectionMultiplexer connectionMultiplexer)
         {
-            _connectionWrapper = connectionMultiplexer ?? throw new Exception("Redis connection multiplexer is null.");
+            _connectionWrapper = connectionMultiplexer ?? throw new ArgumentNullException(nameof(connectionMultiplexer),"Redis connection multiplexer is null.");
         }
 
         /// <inheritdoc />
         public async Task<long> PublishAsync<T>(string channel, T data)
         {
-            var serializeJson = data.ToJSON();
+            var serializeJson = JsonConvert.SerializeObject(data);
             return await PublishAsync(channel, serializeJson);
         }
 
@@ -55,7 +52,7 @@ namespace POC_SignalR.Service
         /// <inheritdoc />
         public long Publish<T>(string channel, T data)
         {
-            var serializeJson = data.ToJSON();
+            var serializeJson = JsonConvert.SerializeObject(data);
             return Publish(channel, serializeJson);
         }
 

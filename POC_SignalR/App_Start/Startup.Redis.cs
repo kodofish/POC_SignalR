@@ -1,11 +1,10 @@
-﻿using LevelUp.Serializer;
-using Microsoft.AspNet.SignalR;
+﻿using Microsoft.AspNet.SignalR;
 using Microsoft.Owin;
-using POC_SignalR.App_Start;
+using Newtonsoft.Json;
+using POC_SignalR;
 using POC_SignalR.Hub;
 using POC_SignalR.Service;
 using StackExchange.Redis;
-using Startup = POC_SignalR.Startup;
 
 [assembly: OwinStartup(typeof(Startup))]
 
@@ -21,7 +20,7 @@ namespace POC_SignalR
         /// </summary>
         private void InitialService()
         {
-            IConnectionMultiplexer connectionMultiplexer = RedisHelper.Instance;
+            IConnectionMultiplexer connectionMultiplexer = RedisFactory.Instance;
             _subscriber = new RedisNotificationService(connectionMultiplexer);
             _mainHub = GlobalHost.ConnectionManager.GetHubContext<MainHub>();
         }
@@ -29,14 +28,14 @@ namespace POC_SignalR
         /// <summary>
         ///     初始化 Redis 設定
         /// </summary>
-        public void ConfigurationRedis()
+        private void ConfigurationRedis()
         {
             InitialService();
 
             // 訂閱: 訊息通知 (value: <BonusNotification>)
             _subscriber.Subscribe("ChatMessage", (channel, value) =>
             {
-                ChatMessage chatMessage = Serializer.DeSerializeFromText<ChatMessage>(value, SerializerType.Json);
+                var chatMessage = JsonConvert.DeserializeObject<ChatMessage>(value);
                 _mainHub.Clients.All.broadcastMessage(chatMessage.Name, chatMessage.Message);
             });
         }
