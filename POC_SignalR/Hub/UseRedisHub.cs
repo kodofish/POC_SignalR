@@ -5,7 +5,7 @@ using StackExchange.Redis;
 
 namespace POC_SignalR.Hub
 {
-    public sealed class UseRedisHub : Microsoft.AspNet.SignalR.Hub
+    public sealed class UseRedisHub : Microsoft.AspNet.SignalR.Hub<IMainHubClient>
     {
         private readonly ConnectionMultiplexer _redisConnection = RedisFactory.Instance;
 
@@ -37,5 +37,10 @@ namespace POC_SignalR.Hub
 
             await _redisNotification.PublishAsync("ChatMessage", chatMessage);
         }
+    }
+    
+    public interface IMainHubClient
+    {
+        void hello();
     }
 }
