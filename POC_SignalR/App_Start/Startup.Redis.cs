@@ -33,7 +33,8 @@ namespace POC_SignalR
             InitialService();
 
             // 訂閱: 訊息通知 (value: <BonusNotification>)
-            _subscriber.Subscribe("ChatMessage", (channel, value) =>
+            var redisChannel = new RedisChannel("ChatMessage", RedisChannel.PatternMode.Auto);
+            _subscriber.Subscribe(redisChannel, (channel, value) =>
             {
                 var chatMessage = JsonConvert.DeserializeObject<ChatMessage>(value);
                 _mainHub.Clients.All.broadcastMessage(chatMessage.Name, chatMessage.Message);

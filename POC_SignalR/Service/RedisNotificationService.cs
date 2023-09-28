@@ -37,7 +37,8 @@ namespace POC_SignalR.Service
         public async Task<long> PublishAsync(string channel, string serializeObject)
         {
             var subscriber = _connectionWrapper.GetSubscriber();
-            var published = await subscriber.PublishAsync(channel, serializeObject);
+            var redisChannel = new RedisChannel(channel, RedisChannel.PatternMode.Auto);
+            var published = await subscriber.PublishAsync(redisChannel, serializeObject);
             return published;
         }
 
@@ -45,7 +46,8 @@ namespace POC_SignalR.Service
         public long Publish(string channel, string serializeObject)
         {
             var subscriber = _connectionWrapper.GetSubscriber();
-            var published = subscriber.Publish(channel, serializeObject);
+            var redisChannel = new RedisChannel(channel, RedisChannel.PatternMode.Auto);
+            var published = subscriber.Publish(redisChannel, serializeObject);
             return published;
         }
 
@@ -53,7 +55,8 @@ namespace POC_SignalR.Service
         public long Publish<T>(string channel, T data)
         {
             var serializeJson = JsonConvert.SerializeObject(data);
-            return Publish(channel, serializeJson);
+            var redisChannel = new RedisChannel(channel, RedisChannel.PatternMode.Auto);
+            return Publish(redisChannel, serializeJson);
         }
 
         /// <inheritdoc />
